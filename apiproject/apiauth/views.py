@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from .Serializer import AuthSerializer
 from .models import CustomUser
 
-class AuthView(APIView):
+class UserView(APIView):
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = AuthSerializer(users, many=True)
@@ -27,3 +27,19 @@ class UserLoginView(APIView):
             return Response({"token": token.key}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class UserDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        serializer = AuthSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        serializer = AuthSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
