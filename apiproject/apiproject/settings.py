@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--o*yj(f%k6vm-c++cl8$p-st_z#)e_c!h@-af3qrn$qzz8@(iv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apiauth.apps.ApiauthConfig',
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -77,8 +78,9 @@ WSGI_APPLICATION = 'apiproject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': "django",
+        'NAME': "django_auth",
         "USER": "root",
+        #"DATABASE": "django_auth",
         "PASSWORD": "X!AqAuHrDxB5u^q@C*@3Mp^cq^EdsMgx%w*Q*@@6Nt^m*CSHgHr80dGM9cvTBhNB",
         "HOST": "192.168.69.1",
         "PORT": "3306",
@@ -127,4 +129,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'accounts.CustomUser'
+AUTH_USER_MODEL = 'apiauth.CustomUser'

@@ -29,10 +29,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     prenom = models.CharField(max_length=150)
     date_creation = models.DateTimeField(default=timezone.now)
     dernier_login = models.DateTimeField(null=True, blank=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='client')
+    role = models.CharField(max_length=15, choices=ROLE_CHOICES, default='client')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['email', 'nom', 'prenom']
+    REQUIRED_FIELDS = ['nom', 'prenom']
 
     objects = CustomUserManager()
 

@@ -1,14 +1,15 @@
 from rest_framework import serializers
-from .models import Auth
+from .models import CustomUser
 
 class AuthSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Auth
+        model = CustomUser
         fields = [
             "id",
-            "titre",
-            "artiste",
-            "date_de_production",
-            "nombre_de_pistes",
-            "duree_en_minutes"
+            "email",
+            "nom",
+            "prenom",
+            "date_creation",
+            "dernier_login",
+            "role"
         ]
