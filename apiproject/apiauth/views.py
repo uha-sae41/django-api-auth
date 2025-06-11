@@ -1,3 +1,5 @@
+from faulthandler import is_enabled
+
 from django.contrib.auth import authenticate
 from django.shortcuts import render
 from rest_framework import status, generics, permissions
@@ -9,7 +11,25 @@ from rest_framework.views import APIView
 from .Serializer import AuthSerializer
 from .models import CustomUser
 
+class isBanquier(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == 'banquier' or request.user.role == 'administrateur'
+
+class PermissionSelfOrBanquier(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == 'banquier' or request.user.role == 'administrateur' or request.user.id == view.kwargs.get('id')
+
+class PermissionBanquier(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.role == 'banquier'
+
+class PermissionSelf(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.id == view.kwargs.get('id')
+
 class UserView(APIView):
+    permission_classes = [permissions.IsAuthenticated, isBanquier]
+
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = AuthSerializer(users, many=True)
@@ -59,11 +79,35 @@ class ChangePasswordView(APIView):
         user.save()
         return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
 
+
 class UserUpdateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, PermissionSelf]
 
     def put(self, request, *args, **kwargs):
-        user = request.user
+        id = request.data.get('user_id')
+        user = CustomUser.objects.get(id=id)
+
+        email = request.data.get('email')
+        if email is not None:
+            data = {'email': email}
+        else:
+            data = {}
+
+        serializer = AuthSerializer(user, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserUpdateViewByIdView(APIView):
+    permission_classes = [permissions.IsAuthenticated, PermissionBanquier]
+
+    def put(self, request, id, *args, **kwargs):
+        try:
+            user = CustomUser.objects.get(id=id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
         serializer = AuthSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -101,3 +145,14 @@ class ValidateTokenView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
             return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class UserDetailByIdView(APIView):
+    permission_classes = [permissions.IsAuthenticated, isBanquier]
+
+    def get(self, request, id, *args, **kwargs):
+        try:
+            user = CustomUser.objects.get(id=id)
+            serializer = AuthSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
