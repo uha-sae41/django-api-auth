@@ -21,7 +21,7 @@ class PermissionSelfOrBanquier(permissions.BasePermission):
 
 class PermissionBanquier(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'banquier'
+        return request.user.role == 'banquier' or request.user.role == 'administrateur'
 
 class PermissionSelf(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -108,9 +108,15 @@ class UserUpdateViewByIdView(APIView):
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        data = request.data.copy()
+        password = data.pop('password', None)
+
         serializer = AuthSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            if password:
+                user.set_password(password)
+                user.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
